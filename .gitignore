@@ -1,0 +1,32 @@
+# Ambientes Virtuais Python
+.venv/
+.venv*/
+env/
+venv/
+ENV/
+build/
+dist/
+
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pytest_cache/
+.pytest_cache/
+
+# Executáveis locais gerados e empacotamento
+*.exe
+*.zip
+*.log
+
+# Bancos de dados locais de teste / ambiente
+*.db
+*.sqlite3
+*.db-wal
+*.db-shm
+
+# IDEs e editores
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
