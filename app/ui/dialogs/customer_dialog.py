@@ -31,7 +31,6 @@ class CustomerDialog:
             hint_text="(00) 00000-0000",
             border_color=AppColors.BORDER,
             focused_border_color=AppColors.PRIMARY,
-            expand=True,
         )
 
         cpf_input = ft.TextField(
@@ -40,7 +39,6 @@ class CustomerDialog:
             hint_text="000.000.000-00",
             border_color=AppColors.BORDER,
             focused_border_color=AppColors.PRIMARY,
-            expand=True,
         )
 
         address_input = ft.TextField(
@@ -171,7 +169,8 @@ class CustomerDialog:
                 content=ft.Column(
                     controls=[
                         name_input,
-                        ft.Row([phone_input, cpf_input], spacing=10),
+                        phone_input,
+                        cpf_input,
                         address_input,
                         credit_limit_input,
                         notes_input,
@@ -181,7 +180,7 @@ class CustomerDialog:
                     tight=True,
                     spacing=12,
                 ),
-                width=520,
+                width=460,
             ),
             actions=[
                 ft.TextButton("Cancelar", on_click=close_dialog),

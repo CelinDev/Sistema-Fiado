@@ -160,22 +160,41 @@ class CustomersPage:
                 ft.DataRow(
                     cells=[
                         ft.DataCell(
-                            ft.Column(
-                                controls=[
-                                    ft.Text(c.name, weight=ft.FontWeight.BOLD, size=14, color=AppColors.TEXT_PRIMARY),
-                                    ft.Text(f"CPF: {format_cpf(c.cpf)}" if c.cpf else "CPF não informado", size=11, color=AppColors.TEXT_SECONDARY),
-                                ],
-                                spacing=1,
+                            ft.Container(
+                                content=ft.Column(
+                                    controls=[
+                                        ft.Text(
+                                            c.name,
+                                            weight=ft.FontWeight.BOLD,
+                                            size=14,
+                                            color=AppColors.TEXT_PRIMARY,
+                                            max_lines=1,
+                                            overflow=ft.TextOverflow.ELLIPSIS,
+                                            tooltip=c.name,
+                                        ),
+                                        ft.Text(
+                                            f"CPF: {format_cpf(c.cpf)}" if c.cpf else "CPF não informado",
+                                            size=11,
+                                            color=AppColors.TEXT_SECONDARY,
+                                            no_wrap=True,
+                                        ),
+                                    ],
+                                    spacing=2,
+                                    alignment=ft.MainAxisAlignment.CENTER,
+                                ),
+                                width=220,
+                                padding=ft.padding.symmetric(vertical=4),
                             )
                         ),
-                        ft.DataCell(ft.Text(format_phone(c.phone) if c.phone else "-")),
-                        ft.DataCell(ft.Text(format_currency(c.total_purchases_cents))),
+                        ft.DataCell(ft.Text(format_phone(c.phone) if c.phone else "-", no_wrap=True)),
+                        ft.DataCell(ft.Text(format_currency(c.total_purchases_cents), no_wrap=True)),
                         ft.DataCell(
                             ft.Text(
                                 format_currency(debt_cents),
                                 weight=ft.FontWeight.BOLD,
                                 color=AppColors.DANGER if has_debt else AppColors.TEXT_PRIMARY,
                                 size=14,
+                                no_wrap=True,
                             )
                         ),
                         ft.DataCell(status_badge),
@@ -188,6 +207,9 @@ class CustomersPage:
             content=ft.Column(
                 controls=[
                     ft.DataTable(
+                        column_spacing=24,
+                        data_row_min_height=52,
+                        data_row_max_height=64,
                         columns=[
                             ft.DataColumn(ft.Text("Nome / CPF")),
                             ft.DataColumn(ft.Text("Telefone")),
