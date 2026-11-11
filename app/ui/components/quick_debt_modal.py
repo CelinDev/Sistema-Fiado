@@ -21,6 +21,16 @@ class QuickDebtModal:
     ):
         customers = customer_service.search_customers(active_only=True)
 
+        customer_search_input = ft.TextField(
+            hint_text="Buscar cliente por nome ou fone...",
+            prefix_icon=ft.Icons.SEARCH,
+            dense=True,
+            height=38,
+            text_size=13,
+            border_color=AppColors.BORDER,
+            focused_border_color=AppColors.PRIMARY,
+        )
+
         customer_dropdown = ft.Dropdown(
             label="Selecione o Cliente *",
             options=[
@@ -36,9 +46,31 @@ class QuickDebtModal:
             focused_border_color=AppColors.PRIMARY,
         )
 
+        def on_customer_search_change(e):
+            term = (customer_search_input.value or "").strip().lower()
+            filtered = [
+                c for c in customers
+                if not term or term in c.name.lower() or (c.phone and term in c.phone.lower())
+            ]
+            customer_dropdown.options = [
+                ft.dropdown.Option(
+                    key=str(c.id),
+                    text=f"{c.name} {f'({c.phone})' if c.phone else ''}",
+                )
+                for c in filtered
+            ]
+            # Se a seleção atual não estiver na lista filtrada, limpa a seleção
+            current_keys = [opt.key for opt in customer_dropdown.options]
+            if customer_dropdown.value not in current_keys:
+                customer_dropdown.value = current_keys[0] if len(current_keys) == 1 else None
+            page.update()
+
+        customer_search_input.on_change = on_customer_search_change
+
         def refresh_customer_list(newly_created: Optional[Customer] = None):
             nonlocal customers
             customers = customer_service.search_customers(active_only=True)
+            customer_search_input.value = ""
             customer_dropdown.options = [
                 ft.dropdown.Option(
                     key=str(c.id),
@@ -62,7 +94,8 @@ class QuickDebtModal:
 
         desc_input = ft.TextField(
             label="Descrição da Compra *",
-            hint_text="Ex: Pães, queijo e presunto",
+            value="Diversos",
+            hint_text="Ex: Diversos, Pães, Mercearia",
             border_color=AppColors.BORDER,
             focused_border_color=AppColors.PRIMARY,
         )
@@ -112,14 +145,6 @@ class QuickDebtModal:
                 ft.OutlinedButton("30 dias", on_click=set_due_days(30), height=28),
             ],
             spacing=6,
-        )
-
-        notes_input = ft.TextField(
-            label="Observações (Opcional)",
-            multiline=True,
-            max_lines=2,
-            border_color=AppColors.BORDER,
-            focused_border_color=AppColors.PRIMARY,
         )
 
         error_text = ft.Text("", color=AppColors.DANGER, size=13, visible=False)
@@ -189,7 +214,7 @@ class QuickDebtModal:
                     original_amount_cents=cents,
                     debt_date=debt_dt,
                     due_date=due_date,
-                    notes=notes_input.value.strip() or None,
+                    notes=None,
                 )
                 created_debt = debt_service.create_debt(debt_data)
 
@@ -232,6 +257,7 @@ class QuickDebtModal:
             content=ft.Container(
                 content=ft.Column(
                     controls=[
+                        customer_search_input,
                         ft.Row(
                             controls=[customer_dropdown, btn_new_customer],
                             vertical_alignment=ft.CrossAxisAlignment.CENTER,
@@ -243,7 +269,6 @@ class QuickDebtModal:
                             spacing=10,
                         ),
                         due_chips,
-                        notes_input,
                         error_text,
                     ],
                     tight=True,
