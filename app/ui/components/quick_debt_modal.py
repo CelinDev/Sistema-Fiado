@@ -149,6 +149,11 @@ class QuickDebtModal:
 
         error_text = ft.Text("", color=AppColors.DANGER, size=13, visible=False)
 
+        desc_input.on_submit = lambda e: save_debt(e)
+        amount_input.on_submit = lambda e: save_debt(e)
+        debt_date_input.on_submit = lambda e: save_debt(e)
+        due_date_input.on_submit = lambda e: save_debt(e)
+
         def close_dialog(e):
             dialog.open = False
             page.update()

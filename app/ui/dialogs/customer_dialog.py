@@ -79,6 +79,12 @@ class CustomerDialog:
 
         error_text = ft.Text("", color=AppColors.DANGER, size=13, visible=False)
 
+        name_input.on_submit = lambda e: save_customer(e)
+        phone_input.on_submit = lambda e: save_customer(e)
+        cpf_input.on_submit = lambda e: save_customer(e)
+        address_input.on_submit = lambda e: save_customer(e)
+        credit_limit_input.on_submit = lambda e: save_customer(e)
+
         def close_dialog(e):
             dialog.open = False
             page.update()

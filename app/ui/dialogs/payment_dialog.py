@@ -97,6 +97,8 @@ class PaymentDialog:
 
         error_text = ft.Text("", color=AppColors.DANGER, size=13, visible=False)
 
+        amount_input.on_submit = lambda e: confirm_payment(e)
+
         def close_dialog(e):
             dialog.open = False
             page.update()

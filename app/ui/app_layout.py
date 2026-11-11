@@ -2,6 +2,8 @@ from typing import Dict, Optional
 import flet as ft
 
 from app.ui.components.quick_debt_modal import QuickDebtModal
+from app.ui.dialogs.customer_dialog import CustomerDialog
+from app.ui.dialogs.quick_payment_search_dialog import QuickPaymentSearchDialog
 from app.ui.pages.customer_detail_page import CustomerDetailPage
 from app.ui.pages.customers_page import CustomersPage
 from app.ui.pages.dashboard_page import DashboardPage
@@ -21,10 +23,10 @@ class AppLayout:
         self.nav_buttons: Dict[str, ft.Container] = {}
 
     def build(self) -> ft.Control:
-        # Botão em destaque "NOVO FIADO" no topo da Sidebar
+        # Botão em destaque "NOVO FIADO (F2)" no topo da Sidebar
         btn_quick_debt = ft.Container(
             content=ft.ElevatedButton(
-                "NOVO FIADO",
+                "NOVO FIADO (F2)",
                 icon=ft.Icons.ADD_SHOPPING_CART,
                 style=ft.ButtonStyle(
                     bgcolor=AppColors.PRIMARY,
@@ -83,10 +85,21 @@ class AppLayout:
                     ft.Divider(color=AppColors.BG_SIDEBAR_ACTIVE, thickness=1),
                     ft.Column(controls=sidebar_items, spacing=4),
                     ft.Container(expand=True),
-                    # Rodapé da Sidebar
+                    # Rodapé da Sidebar com Dicas de Atalhos
                     ft.Container(
-                        content=ft.Text("v1.0.0 • Offline", size=11, color=AppColors.TEXT_MUTED),
-                        padding=ft.padding.only(left=20, bottom=16),
+                        content=ft.Column(
+                            controls=[
+                                ft.Text("ATALHOS DO CAIXA", size=10, weight=ft.FontWeight.BOLD, color=AppColors.PRIMARY),
+                                ft.Text("F2 • Lançar Fiado", size=11, color=AppColors.TEXT_MUTED),
+                                ft.Text("F3 • Receber Pagamento", size=11, color=AppColors.TEXT_MUTED),
+                                ft.Text("F4 • Buscar Clientes", size=11, color=AppColors.TEXT_MUTED),
+                                ft.Text("F5 • Novo Cliente", size=11, color=AppColors.TEXT_MUTED),
+                                ft.Divider(color=AppColors.BG_SIDEBAR_ACTIVE, thickness=0.5),
+                                ft.Text("v1.0.0 • Offline", size=10, color=AppColors.TEXT_MUTED),
+                            ],
+                            spacing=3,
+                        ),
+                        padding=ft.padding.only(left=18, right=18, bottom=16),
                     ),
                 ],
                 spacing=4,
@@ -97,6 +110,9 @@ class AppLayout:
 
         # Monta a rota inicial
         self._render_current_page()
+
+        # Vincula os atalhos de teclado globais
+        self.page.on_keyboard_event = self._on_keyboard_event
 
         return ft.Row(
             controls=[
@@ -178,3 +194,21 @@ class AppLayout:
 
     def _on_quick_debt_success(self):
         self.navigate_to(self.current_route, self.route_params)
+
+    def _on_keyboard_event(self, e: ft.KeyboardEvent):
+        key = e.key.upper() if e.key else ""
+        if key == "F2":
+            QuickDebtModal.show(self.page, on_success=self._on_quick_debt_success)
+        elif key == "F3":
+            QuickPaymentSearchDialog.show(self.page, on_success=self._on_quick_debt_success)
+        elif key == "F4":
+            self.navigate_to("customers", {})
+        elif key == "F5":
+            CustomerDialog.show(self.page, on_saved=lambda c: self.navigate_to("customers", {}))
+        elif key == "ESCAPE":
+            # Fecha qualquer diálogo/modal aberto
+            for dialog in list(self.page.overlay):
+                if isinstance(dialog, ft.AlertDialog) and getattr(dialog, "open", False):
+                    dialog.open = False
+                    self.page.update()
+
