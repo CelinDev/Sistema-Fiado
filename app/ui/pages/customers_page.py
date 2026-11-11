@@ -51,6 +51,53 @@ class CustomersPage:
             on_click=lambda e: CustomerDialog.show(self.page, on_saved=lambda c: self.refresh()),
         )
 
+        def on_file_picked(e: ft.FilePickerResultEvent):
+            if not e.files or len(e.files) == 0:
+                return
+            file_path = e.files[0].path
+            try:
+                res = customer_service.import_customers_from_file(file_path)
+                created = res.get("created", 0)
+                skipped = res.get("skipped", 0)
+                errors = res.get("errors", [])
+                
+                msg = f"Importação concluída: {created} cadastrado(s), {skipped} ignorado(s)."
+                if errors:
+                    msg += f" {len(errors)} com erro."
+                
+                self.page.snack_bar = ft.SnackBar(
+                    content=ft.Text(msg),
+                    bgcolor=AppColors.SUCCESS if created > 0 else AppColors.WARNING,
+                )
+                self.page.snack_bar.open = True
+                self.refresh()
+            except Exception as ex:
+                self.page.snack_bar = ft.SnackBar(
+                    content=ft.Text(f"Erro na importação: {ex}"),
+                    bgcolor=AppColors.DANGER,
+                )
+                self.page.snack_bar.open = True
+                self.page.update()
+
+        file_picker = ft.FilePicker(on_result=on_file_picked)
+        if file_picker not in self.page.overlay:
+            self.page.overlay.append(file_picker)
+
+        btn_import = ft.OutlinedButton(
+            "Importar Excel / CSV",
+            icon=ft.Icons.UPLOAD_FILE,
+            height=42,
+            style=ft.ButtonStyle(
+                color=AppColors.PRIMARY,
+                side=ft.BorderSide(1.5, AppColors.PRIMARY),
+            ),
+            on_click=lambda e: file_picker.pick_files(
+                dialog_title="Selecione a planilha de clientes (.xlsx, .csv)",
+                allowed_extensions=["xlsx", "xls", "csv"],
+                allow_multiple=False,
+            ),
+        )
+
         self.table_container = ft.Container()
         self._render_table()
 
@@ -66,7 +113,10 @@ class CustomersPage:
                             ],
                             spacing=2,
                         ),
-                        btn_new_customer,
+                        ft.Row(
+                            controls=[btn_import, btn_new_customer],
+                            spacing=10,
+                        ),
                     ],
                 ),
                 ft.Container(height=16),

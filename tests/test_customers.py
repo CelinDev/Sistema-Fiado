@@ -79,3 +79,31 @@ def test_customer_delete_only_when_settled(cust_service, tmp_path):
 
     with pytest.raises(ValueError, match="possui débitos em aberto"):
         cust_service.delete_customer(c2.id)
+
+
+def test_import_customers_from_csv(cust_service, tmp_path):
+    csv_file = tmp_path / "clientes.csv"
+    csv_content = """Nome;Telefone;CPF;Endereço;Limite;Observações
+João da Silva;(11) 98888-7777;123.456.789-01;Rua A, 10;150,00;Bom pagador
+Maria Souza;11977776666;;Rua B, 20;200;Cliente antigo
+"""
+    csv_file.write_text(csv_content, encoding="utf-8")
+
+    res = cust_service.import_customers_from_file(str(csv_file))
+    assert res["created"] == 2
+    assert res["skipped"] == 0
+    assert len(res["errors"]) == 0
+
+    joao = cust_service.search_customers("João da Silva")[0]
+    assert joao.phone == "11988887777"
+    assert joao.cpf == "12345678901"
+    assert joao.credit_limit_cents == 15000
+
+    maria = cust_service.search_customers("Maria Souza")[0]
+    assert maria.credit_limit_cents == 20000
+
+    # Testar duplicata no re-envio
+    res2 = cust_service.import_customers_from_file(str(csv_file))
+    assert res2["created"] == 0
+    assert res2["skipped"] == 2
+

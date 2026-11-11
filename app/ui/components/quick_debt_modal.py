@@ -76,6 +76,17 @@ class QuickDebtModal:
             focused_border_color=AppColors.PRIMARY,
         )
 
+        # Data da compra (padrão hoje, mas personalizável)
+        today_str = datetime.now().strftime("%d/%m/%Y")
+        debt_date_input = ft.TextField(
+            label="Data da Compra (DD/MM/AAAA) *",
+            value=today_str,
+            hint_text="DD/MM/AAAA",
+            border_color=AppColors.BORDER,
+            focused_border_color=AppColors.PRIMARY,
+            expand=True,
+        )
+
         # Sugestão de vencimento padrão (15 dias ou 30 dias)
         default_due = (date.today() + timedelta(days=30)).strftime("%d/%m/%Y")
         due_date_input = ft.TextField(
@@ -144,6 +155,22 @@ class QuickDebtModal:
                 page.update()
                 return
 
+            debt_dt = None
+            if debt_date_input.value and debt_date_input.value.strip():
+                try:
+                    parsed_d = datetime.strptime(debt_date_input.value.strip(), "%d/%m/%Y")
+                    # Mantém o horário atual se for hoje, ou 12:00 se for data retroativa
+                    now = datetime.now()
+                    if parsed_d.date() == now.date():
+                        debt_dt = now
+                    else:
+                        debt_dt = parsed_d.replace(hour=12, minute=0, second=0)
+                except ValueError:
+                    error_text.value = "Data da compra inválida. Use DD/MM/AAAA."
+                    error_text.visible = True
+                    page.update()
+                    return
+
             due_date = None
             if due_date_input.value and due_date_input.value.strip():
                 try:
@@ -160,6 +187,7 @@ class QuickDebtModal:
                     customer_id=int(customer_dropdown.value),
                     description=desc,
                     original_amount_cents=cents,
+                    debt_date=debt_dt,
                     due_date=due_date,
                     notes=notes_input.value.strip() or None,
                 )
@@ -210,7 +238,10 @@ class QuickDebtModal:
                         ),
                         desc_input,
                         amount_input,
-                        due_date_input,
+                        ft.Row(
+                            controls=[debt_date_input, due_date_input],
+                            spacing=10,
+                        ),
                         due_chips,
                         notes_input,
                         error_text,

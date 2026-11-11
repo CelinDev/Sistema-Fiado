@@ -4,7 +4,7 @@ from app.database.connection import db_manager
 from app.database.models import Base, AppSetting
 from app.utils.logger import logger
 
-CURRENT_SCHEMA_VERSION = 2
+CURRENT_SCHEMA_VERSION = 3
 
 
 def run_migrations(engine=None) -> None:
@@ -18,17 +18,24 @@ def run_migrations(engine=None) -> None:
     # Cria tabelas que ainda não existam (seguro e idempotente)
     Base.metadata.create_all(bind=target_engine)
 
-    # Migração v2: Adiciona coluna credit_limit_cents na tabela customers se não existir
+    # Migração incremental de colunas
     with target_engine.connect() as conn:
         try:
-            columns_info = conn.execute(text("PRAGMA table_info(customers)")).fetchall()
-            col_names = [row[1] for row in columns_info]
-            if "credit_limit_cents" not in col_names:
+            # v2: credit_limit_cents em customers
+            cust_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(customers)")).fetchall()]
+            if "credit_limit_cents" not in cust_cols:
                 logger.info("Adicionando coluna 'credit_limit_cents' à tabela 'customers'...")
                 conn.execute(text("ALTER TABLE customers ADD COLUMN credit_limit_cents INTEGER DEFAULT NULL"))
                 conn.commit()
+
+            # v3: created_at garantido em debts (já existia no modelo, validamos integridade)
+            debt_cols = [row[1] for row in conn.execute(text("PRAGMA table_info(debts)")).fetchall()]
+            if "created_at" not in debt_cols:
+                logger.info("Adicionando coluna 'created_at' à tabela 'debts'...")
+                conn.execute(text("ALTER TABLE debts ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP"))
+                conn.commit()
         except Exception as e:
-            logger.warning(f"Aviso ao verificar coluna credit_limit_cents: {e}")
+            logger.warning(f"Aviso ao verificar/atualizar colunas: {e}")
 
     # Verifica e registra a versão do schema
     with target_engine.connect() as conn:

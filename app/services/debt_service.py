@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from typing import List, Optional
 from sqlalchemy.orm import Session
 
@@ -51,6 +51,7 @@ class DebtService:
                 due_date=data.due_date,
                 status=status,
                 notes=data.notes,
+                created_at=data.debt_date or datetime.now(),
             )
             debt_repo.add(debt)
 

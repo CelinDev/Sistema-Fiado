@@ -67,6 +67,7 @@ class DebtCreateSchema(BaseModel):
     customer_id: int = Field(..., gt=0, description="ID do cliente")
     description: str = Field(..., min_length=2, max_length=255, description="Descrição da compra fiada")
     original_amount_cents: int = Field(..., gt=0, description="Valor original em centavos inteiros")
+    debt_date: Optional[datetime] = Field(None, description="Data e hora da realização da compra")
     due_date: Optional[date] = None
     notes: Optional[str] = None
 
