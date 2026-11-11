@@ -1,3 +1,5 @@
+import os
+import subprocess
 from typing import Callable
 import flet as ft
 
@@ -389,11 +391,23 @@ class CustomerDetailPage:
             on_confirm=do_cancel,
         )
 
+    def _open_file(self, file_path):
+        """Abre o arquivo PDF no leitor ou navegador padrão do sistema operacional."""
+        try:
+            abs_path = os.path.abspath(str(file_path))
+            os.startfile(abs_path)
+        except Exception:
+            try:
+                subprocess.Popen(["start", "", str(file_path)], shell=True)
+            except Exception:
+                pass
+
     def _generate_statement_pdf(self):
         try:
             pdf_path = report_service.generate_customer_statement_pdf(self.customer_id)
+            self._open_file(pdf_path)
             self.page.snack_bar = ft.SnackBar(
-                content=ft.Text(f"Extrato gerado com sucesso em: {pdf_path}"),
+                content=ft.Text(f"Extrato aberto com sucesso! ({pdf_path.name})"),
                 bgcolor=AppColors.SUCCESS,
             )
             self.page.snack_bar.open = True
@@ -433,8 +447,9 @@ class CustomerDetailPage:
     def _print_thermal_debt(self, debt_id: int):
         try:
             cupom = report_service.generate_thermal_receipt_pdf("DEBT", debt_id, paper_width_mm=80)
+            self._open_file(cupom)
             self.page.snack_bar = ft.SnackBar(
-                content=ft.Text(f"Cupom de Fiado gerado: {cupom.name}"),
+                content=ft.Text(f"Cupom de Fiado aberto para impressão: {cupom.name}"),
                 bgcolor=AppColors.SUCCESS,
             )
             self.page.snack_bar.open = True
@@ -447,8 +462,9 @@ class CustomerDetailPage:
     def _print_thermal_payment(self, payment_id: int):
         try:
             cupom = report_service.generate_thermal_receipt_pdf("PAYMENT", payment_id, paper_width_mm=80)
+            self._open_file(cupom)
             self.page.snack_bar = ft.SnackBar(
-                content=ft.Text(f"Cupom de Pagamento gerado: {cupom.name}"),
+                content=ft.Text(f"Cupom de Pagamento aberto para impressão: {cupom.name}"),
                 bgcolor=AppColors.SUCCESS,
             )
             self.page.snack_bar.open = True

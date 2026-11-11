@@ -1,3 +1,5 @@
+import os
+import subprocess
 from typing import Callable
 import flet as ft
 
@@ -12,6 +14,15 @@ class ReportsPage:
         self.navigate_to = navigate_to
 
     def build(self) -> ft.Control:
+        def open_file(file_path):
+            try:
+                os.startfile(os.path.abspath(str(file_path)))
+            except Exception:
+                try:
+                    subprocess.Popen(["start", "", str(file_path)], shell=True)
+                except Exception:
+                    pass
+
         def show_notification(msg: str, is_error: bool = False):
             self.page.snack_bar = ft.SnackBar(
                 content=ft.Text(msg),
@@ -23,28 +34,32 @@ class ReportsPage:
         def export_customers_excel():
             try:
                 path = report_service.export_customers_excel(only_with_debt=False)
-                show_notification(f"Arquivo Excel gerado: {path.name}")
+                open_file(path)
+                show_notification(f"Arquivo Excel gerado e aberto: {path.name}")
             except Exception as e:
                 show_notification(f"Erro ao exportar: {e}", is_error=True)
 
         def export_debtors_excel():
             try:
                 path = report_service.export_customers_excel(only_with_debt=True)
-                show_notification(f"Relatório de Devedores gerado: {path.name}")
+                open_file(path)
+                show_notification(f"Relatório de Devedores gerado e aberto: {path.name}")
             except Exception as e:
                 show_notification(f"Erro ao exportar: {e}", is_error=True)
 
         def export_overdue_pdf():
             try:
                 path = report_service.export_overdue_debts_pdf()
-                show_notification(f"Relatório PDF de Vencidos gerado: {path.name}")
+                open_file(path)
+                show_notification(f"Relatório PDF de Vencidos gerado e aberto: {path.name}")
             except Exception as e:
                 show_notification(f"Erro ao exportar: {e}", is_error=True)
 
         def export_payments_excel():
             try:
                 path = report_service.export_payments_excel()
-                show_notification(f"Relatório de Pagamentos gerado: {path.name}")
+                open_file(path)
+                show_notification(f"Relatório de Pagamentos gerado e aberto: {path.name}")
             except Exception as e:
                 show_notification(f"Erro ao exportar: {e}", is_error=True)
 
